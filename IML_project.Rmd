@@ -11,22 +11,31 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Todo
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+- ~~dummy classifier~~
+- class4 -> event/nonevent, week1 exe?
+- varianssit mukana/ei mukana? ei one hot -> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan
+- date? paljon informaatiota, mutta halutaanko muuttujaksi <- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois?
+- train, test, cv-10?
+- itse logisticregression, week2 exe1 <- lasso/ridge
+- accuracy, perplexity, week2 exe1
+- accuracy of our accuracy? <-- malli train+test, vähän parempi kuin pelkkä train?
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+- class4 -> nonevent/1a/1b/II/
+- googlaa mahdollisia malleja
 
-
-```{python, eval=FALSE}
+```{python echo=TRUE}
 # Python with sklearn
 
 import pandas as pd
 from sklearn import linear_model
 
-#npf_test = pd.read_csv("~/Intro_to_ML2022/initial_data/npf_test_hidden.csv")
+#npf_test = pd.read_csv("initial_data/npf_test_hidden.csv")
 
-npf_train = pd.read_csv("~/Intro_to_ML2022/initial_data/npf_train.csv")
+npf_train = pd.read_csv("initial_data/npf_train.csv")
 
 npf_train
+
+
 ```
