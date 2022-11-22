@@ -27,9 +27,9 @@ __Work time tracking__
 
 |         | 46 | 47 | 48 | 49 | 50 | total |
 |---------|:--:|:--:|:--:|:--:|:--:|------:|
-|Heikki   | 3  |    |    |    |    |       |
-|Arttu    |    |    |    |    |    |       |
-|Niko     |    |    |    |    |    |       |
+|Heikki   | 3  | 2  |    |    |    |       |
+|Arttu    |    | 2  |    |    |    |       |
+|Niko     |    | 2  |    |    |    |       |
 
 Maybe useful links:
  * add here if found something useful
