@@ -33,3 +33,4 @@ __Work time tracking__
 
 Maybe useful links:
  * add here if found something useful
+ https://www.codementor.io/@agarrahul01/multiclass-classification-using-random-forest-on-scikit-learn-library-hkk4lwawu
