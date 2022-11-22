@@ -1,0 +1,32 @@
+---
+title: "IML_project"
+author: "Heikki Nenonen"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+```{python, eval=FALSE}
+# Python with sklearn
+
+import pandas as pd
+from sklearn import linear_model
+
+#npf_test = pd.read_csv("~/Intro_to_ML2022/initial_data/npf_test_hidden.csv")
+
+npf_train = pd.read_csv("~/Intro_to_ML2022/initial_data/npf_train.csv")
+
+npf_train
+```
