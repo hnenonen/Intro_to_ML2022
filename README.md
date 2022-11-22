@@ -8,7 +8,7 @@ Project task:
 
 __Project parts and DLs:__
 * Classifier __11.12__
-* Almost finished report __11.12__ [Final report](https://docs.google.com/document/d/1rRjexs-sKE2jeW9bW9cJ2-LvkugPFBZ5OTmTD7TKSLA/edit)
+* Almost finished report __11.12__ 
 * Video demonstration 14.12
 * Final report 23.12
 
@@ -31,6 +31,4 @@ __Work time tracking__
 |Arttu    |    | 2  |    |    |    |       |
 |Niko     |    | 2  |    |    |    |       |
 
-Maybe useful links:
- * add here if found something useful
- https://www.codementor.io/@agarrahul01/multiclass-classification-using-random-forest-on-scikit-learn-library-hkk4lwawu
+[Maybe useful links](https://docs.google.com/document/d/1rRjexs-sKE2jeW9bW9cJ2-LvkugPFBZ5OTmTD7TKSLA/edit)
