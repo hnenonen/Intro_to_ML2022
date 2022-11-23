@@ -3,24 +3,28 @@ title: "IML_project"
 author: "Heikki Nenonen"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ## Todo
 
-- dummy classifier
+- ~~dummy classifier~~
 - ~~class4 -> event/nonevent, week1 exe?~~
 - ~~drop partlybad, pelkkää FALSEa~~
-- varianssit mukana/ei mukana? ei one hot -> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan
-- date? paljon informaatiota, mutta halutaanko muuttujaksi <- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois?
-- train, test, cv-10?
-- itse logisticregression, week2 exe1 <- lasso/ridge
-- accuracy, perplexity, week2 exe1
+- **varianssit mukana/ei mukana? ei one hot -> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan**
+- ~~date? paljon informaatiota, mutta halutaanko muuttujaksi <- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois? good riddance!~~
+- ~~train, test, cv-10?~~
+- ~~itse logisticregression, week2 exe1 <- lasso/ridge~~
+- ~~accuracy, perplexity, week2 exe1~~
 - accuracy of our accuracy? <-- malli train+test, vähän parempi kuin pelkkä train?
 
 - class4 -> nonevent/1a/1b/II/
 - googlaa mahdollisia malleja
+
+- logreg with default parameters is best atm, maybe we can optimize
+- plot
+- 
 
 ```{python}
 import pandas as pd
@@ -52,7 +56,7 @@ npf_train_test
 
 
 ```
-```{python}
+```{python include=FALSE}
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression 
@@ -60,7 +64,11 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_squared_error, accuracy_score
 
 
+from sklearn.utils.testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+```
 
+```{python}
 X = npf_train_test.drop(["class2", "class4"], axis=1)
 y = npf_train_test["class2"]
 
@@ -68,43 +76,41 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, train_size=100, random_state=42, shuffle=True, stratify=npf_train_test["class2"]
 )
 
-models = [DummyClassifier(), DummyRegressor(), LogisticRegression(), LogisticRegression(penalty="none", solver="saga"), LogisticRegression(penalty="none", solver="saga")]
+```
+
+```{python}
+#@ignore_warnings(category=ConvergenceWarning)
+def loss(X_tr, y_tr, X_te, y_te, m):
+    return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
+
+
+def accuracy(X_tr, y_tr, X_te, y_te, m):
+    return accuracy_score(y_te, m.fit(X_tr, y_tr).predict(X_te))
+
+perplexity = lambda p: np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
+```
+
+```{python}
+
+models = [DummyClassifier(), LogisticRegression(), LogisticRegression(penalty="elasticnet", l1_ratio=0.5, solver="saga"), LogisticRegression(penalty="l2", C=1, solver="saga"), LogisticRegression(penalty="none", solver="saga"), LogisticRegression(penalty="l1", C=1, solver="saga")] #  DummyRegressor(),
 
 res = pd.DataFrame(index=models)
 
-def loss(X_tr, y_tr, X_te, y_te, m):
-    return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
+
 
 # Loss on training data, for model trained on training data:
-res["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
+res["train_loss"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
 # Los on test data, for model trained on training data:
-res["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+res["test_loss"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
 # Cross-validation loss:
-res["cv"] = [
+res["cv_loss"] = [
     -cross_val_score(
         m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
     ).mean()
     for m in models
 ]
+res["test_accuracy"] = [accuracy(X_train, y_train, X_test, y_test, m) for m in models]
+res["test_perplexity1"] = [perplexity(m.predict_proba(X_test)[:,1]) for m in models]
 
 res
-
-def loss(X_tr, y_tr, X_te, y_te, m):
-    return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
-
-# Loss on training data, for model trained on training data:
-res["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
-# Los on test data, for model trained on training data:
-res["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
-# Cross-validation loss:
-res["cv"] = [
-    -cross_val_score(
-        m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
-    ).mean()
-    for m in models
-]
-
-res
-
-
 ```
