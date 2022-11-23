@@ -8,7 +8,7 @@ Project task:
 
 __Project parts and DLs:__
 * Classifier __11.12__
-* Almost finished report __11.12__ [Final report](https://docs.google.com/document/d/1rRjexs-sKE2jeW9bW9cJ2-LvkugPFBZ5OTmTD7TKSLA/edit)
+* Almost finished report __11.12__ 
 * Video demonstration 14.12
 * Final report 23.12
 
@@ -27,9 +27,8 @@ __Work time tracking__
 
 |         | 46 | 47 | 48 | 49 | 50 | total |
 |---------|:--:|:--:|:--:|:--:|:--:|------:|
-|Heikki   | 3  |    |    |    |    |       |
-|Arttu    |    |    |    |    |    |       |
-|Niko     |    |    |    |    |    |       |
+|Heikki   | 3  | 2  |    |    |    |       |
+|Arttu    |    | 2  |    |    |    |       |
+|Niko     |    | 2  |    |    |    |       |
 
-Maybe useful links:
- * add here if found something useful
+[Maybe useful links](https://docs.google.com/document/d/1rRjexs-sKE2jeW9bW9cJ2-LvkugPFBZ5OTmTD7TKSLA/edit)
