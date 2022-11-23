@@ -27,8 +27,8 @@ __Work time tracking__
 
 |         | 46 | 47 | 48 | 49 | 50 | total |
 |---------|:--:|:--:|:--:|:--:|:--:|------:|
-|Heikki   | 3  | 2  |    |    |    |       |
-|Arttu    |    | 2  |    |    |    |       |
-|Niko     |    | 2  |    |    |    |       |
+|Heikki   | 3  | 4  |    |    |    |       |
+|Arttu    |    | 4  |    |    |    |       |
+|Niko     |    | 4  |    |    |    |       |
 
 [Maybe useful links](https://docs.google.com/document/d/1rRjexs-sKE2jeW9bW9cJ2-LvkugPFBZ5OTmTD7TKSLA/edit)
