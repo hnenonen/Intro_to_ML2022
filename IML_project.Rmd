@@ -7,14 +7,11 @@ output:
   html_document: default
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Todo
 
-- ~~dummy classifier~~
-- class4 -> event/nonevent, week1 exe?
+- dummy classifier
+- ~~class4 -> event/nonevent, week1 exe?~~
+- ~~drop partlybad, pelkkää FALSEa~~
 - varianssit mukana/ei mukana? ei one hot -> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan
 - date? paljon informaatiota, mutta halutaanko muuttujaksi <- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois?
 - train, test, cv-10?
@@ -25,17 +22,34 @@ knitr::opts_chunk$set(echo = TRUE)
 - class4 -> nonevent/1a/1b/II/
 - googlaa mahdollisia malleja
 
-```{python echo=TRUE}
-# Python with sklearn
-
+```{python}
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn import linear_model
 
 #npf_test = pd.read_csv("initial_data/npf_test_hidden.csv")
-
 npf_train = pd.read_csv("initial_data/npf_train.csv")
 
-npf_train
 
+```
+
+
+```{python echo=TRUE}
+
+npf = npf_train.set_index("date")
+npf = npf.drop(['id', 'partlybad'], axis=1)
+
+
+class2 = np.array(["nonevent", "event"])
+class2 = class2[(npf["class4"]!="nonevent").astype(int)]
+npf.insert(loc=0, column="class2", value=class2)
+
+npf
+
+
+
+```
+```{python}
 
 ```
