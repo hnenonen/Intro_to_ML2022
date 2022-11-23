@@ -37,19 +37,74 @@ npf_train = pd.read_csv("initial_data/npf_train.csv")
 
 ```{python echo=TRUE}
 
-npf = npf_train.set_index("date")
-npf = npf.drop(['id', 'partlybad'], axis=1)
+npf_train_test = npf_train.set_index("date")
+npf_train_test = npf_train_test.drop(['id', 'partlybad'], axis=1)
 
 
 class2 = np.array(["nonevent", "event"])
-class2 = class2[(npf["class4"]!="nonevent").astype(int)]
-npf.insert(loc=0, column="class2", value=class2)
+class2 = class2[(npf_train_test["class4"]!="nonevent").astype(int)]
+#class2 = class2.apply(lambda x: 1 if "event" else 0)
+npf_train_test.insert(loc=0, column="class2", value=class2)
+npf_train_test["class2"].replace(["event", "nonevent"],[1,0], inplace=True)
 
-npf
+npf_train_test
 
 
 
 ```
 ```{python}
+from sklearn.dummy import DummyClassifier
+from sklearn.dummy import DummyRegressor
+from sklearn.linear_model import LogisticRegression 
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import mean_squared_error, accuracy_score
+
+
+
+X = npf_train_test.drop(["class2", "class4"], axis=1)
+y = npf_train_test["class2"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, train_size=100, random_state=42, shuffle=True, stratify=npf_train_test["class2"]
+)
+
+models = [DummyClassifier(), DummyRegressor(), LogisticRegression(), LogisticRegression(penalty="none", solver="saga"), LogisticRegression(penalty="none", solver="saga")]
+
+res = pd.DataFrame(index=models)
+
+def loss(X_tr, y_tr, X_te, y_te, m):
+    return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
+
+# Loss on training data, for model trained on training data:
+res["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
+# Los on test data, for model trained on training data:
+res["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+# Cross-validation loss:
+res["cv"] = [
+    -cross_val_score(
+        m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
+    ).mean()
+    for m in models
+]
+
+res
+
+def loss(X_tr, y_tr, X_te, y_te, m):
+    return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
+
+# Loss on training data, for model trained on training data:
+res["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
+# Los on test data, for model trained on training data:
+res["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+# Cross-validation loss:
+res["cv"] = [
+    -cross_val_score(
+        m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
+    ).mean()
+    for m in models
+]
+
+res
+
 
 ```
