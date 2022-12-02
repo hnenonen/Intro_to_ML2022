@@ -9,22 +9,33 @@ output:
 
 ## Todo
 
-- ~~dummy classifier~~
-- ~~class4 -> event/nonevent, week1 exe?~~
-- ~~drop partlybad, pelkkää FALSEa~~
-- **varianssit mukana/ei mukana? ei one hot -> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan**
-- ~~date? paljon informaatiota, mutta halutaanko muuttujaksi <- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois? good riddance!~~
-- ~~train, test, cv-10?~~
-- ~~itse logisticregression, week2 exe1 <- lasso/ridge~~
-- ~~accuracy, perplexity, week2 exe1~~
-- accuracy of our accuracy? <-- malli train+test, vähän parempi kuin pelkkä train?
+-   ~~dummy classifier~~
 
-- ~~class4 -> nonevent/1a/1b/II/ = 0,1,2,3~~
-- googlaa mahdollisia malleja
+-   ~~class4 -\> event/nonevent, week1 exe?~~
 
-- logreg/randomforest/qda with default parameters are best atm, maybe we can optimize
-- plot
-- 
+-   ~~drop partlybad, pelkkää FALSEa~~
+
+-   **varianssit mukana/ei mukana? ei one hot -\> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan**
+
+-   ~~date? paljon informaatiota, mutta halutaanko muuttujaksi \<- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois? good riddance!~~
+
+-   ~~train, test, cv-10?~~
+
+-   ~~itse logisticregression, week2 exe1 \<- lasso/ridge~~
+
+-   ~~accuracy, perplexity, week2 exe1~~
+
+-   accuracy of our accuracy? \<-- malli train+test, vähän parempi kuin pelkkä train?
+
+-   ~~class4 -\> nonevent/1a/1b/II/ = 0,1,2,3~~
+
+-   googlaa mahdollisia malleja
+
+-   logreg/randomforest/qda with default parameters are best atm, maybe we can optimize
+
+-   plot
+
+-   
 
 ```{python}
 import pandas as pd
@@ -37,7 +48,6 @@ npf_train = pd.read_csv("initial_data/npf_train.csv")
 
 
 ```
-
 
 ```{python echo=TRUE}
 
@@ -55,6 +65,7 @@ npf_train_test["class4"].replace(["nonevent", "Ia", "Ib", "II"],[0, 1, 2, 3], in
 
 npf_train_test
 ```
+
 ```{python}
 
 ```
@@ -80,6 +91,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
+from sklearn.neighbors import KNeighborsClassifier
+
 #from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 ```
@@ -95,7 +108,7 @@ X = npf_train_test.drop(["class2", "class4"], axis=1)
 y = npf_train_test["class4"]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.9, random_state=40, shuffle=True, stratify=npf_train_test["class2"]
+    X, y, train_size=0.9, random_state=40, shuffle=True, stratify=npf_train_test["class4"]
 )
 
 ```
@@ -114,6 +127,41 @@ perplexity = lambda p: np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))
 
 ```{python include=FALSE}
 
+def magic(models, classtype):
+  X = npf_train_test.drop(["class2", "class4"], axis=1)
+  y = npf_train_test[classtype]
+  X_train, X_test, y_train, y_test = train_test_split(
+      X, y, train_size=0.9, random_state=40, shuffle=True, stratify=y
+  )
+  
+  res = pd.DataFrame(index=models)
+  # Loss on training data, for model trained on training data:
+  res["train_loss"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
+  # Cross-validation loss:
+  res["cv_loss"] = [
+      -cross_val_score(
+          m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
+      ).mean()
+      for m in models
+  ]
+  # Los on test data, for model trained on training data:
+  res["test_loss"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+  res["test_accuracy"] = [accuracy(X_train, y_train, X_test, y_test, m) for m in models]
+  
+  ##
+  # spaghetti too stiff
+  ##
+  
+  #temporary solution since svm is weird with perplexity, KEEP SVM LAST!!
+  #list = [perplexity(m.predict_proba(X_test)[:,1]) for m in models[0:-1]]
+  #res["test_perplexity1"]= np.append(list, 0)
+  
+  return res
+
+```
+
+```{python}
+
 models = [DummyClassifier(), 
   LogisticRegression(penalty="l2", C=1_000, solver="lbfgs"), 
   LogisticRegression(penalty="elasticnet", l1_ratio=0.5, solver="saga"), 
@@ -122,44 +170,34 @@ models = [DummyClassifier(),
   LogisticRegression(penalty="l1", C=1, solver="saga"),
   GaussianNB(),
   QuadraticDiscriminantAnalysis(),
-  RandomForestClassifier(),
-  make_pipeline(StandardScaler(), SVC(gamma='auto'))
+  RandomForestClassifier()
+  #KNeighborsClassifier(),
+  #make_pipeline(StandardScaler(), SVC(gamma='auto'))
   ] #  DummyRegressor(),
-
-##
-# next: refactor to functions
-##
-
-#def magic(models, df):
-
-res = pd.DataFrame(index=models)
-# Loss on training data, for model trained on training data:
-res["train_loss"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
-# Cross-validation loss:
-res["cv_loss"] = [
-    -cross_val_score(
-        m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
-    ).mean()
-    for m in models
-]
-# Los on test data, for model trained on training data:
-res["test_loss"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
-res["test_accuracy"] = [accuracy(X_train, y_train, X_test, y_test, m) for m in models]
-res["test_perplexity1"] = [perplexity(m.predict_proba(X_test)[:,1]) for m in models]
-
-#return res
+  
+  
+results_class2 = magic(models, 'class2')
+results_class4 = magic(models, 'class4')
+print(results_class2.to_markdown())
+print(results_class4.to_markdown())
 ```
 
 ```{python}
 #shows all columns 
 #required package tabulate 
-print(res.to_markdown())
+#print(res.to_markdown())
+models = [  
+  RandomForestClassifier(criterion='gini'),
+  RandomForestClassifier(criterion='log_loss'),
+  RandomForestClassifier(criterion='entropy')]
+  
+results_class4 = magic(models, 'class4')
+
+
 ```
+
 ```{python}
-log_reg = LogisticRegression(penalty="l2", C=10_000, solver="lbfgs")
-model = log_reg.fit(X_train, y_train)
-model.coef_[0]
+
+print(results_class4.to_markdown())
 
 ```
-
-
