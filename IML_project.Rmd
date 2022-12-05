@@ -45,7 +45,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import linear_model
 
-#npf_test = pd.read_csv("initial_data/npf_test_hidden.csv")
+npf_test = pd.read_csv("initial_data/npf_test_hidden.csv")
 npf_train = pd.read_csv("initial_data/npf_train.csv")
 
 
@@ -115,7 +115,7 @@ def magic(models, classtype):
   X = npf_train_test.drop(["class2", "class4"], axis=1, inplace=False)
   y = npf_train_test[classtype]
   X_train, X_test, y_train, y_test = train_test_split(
-      X, y, train_size=0.9, random_state=40, shuffle=True, stratify=y
+      X, y, train_size=0.8, random_state=41, shuffle=True, stratify=y
   )
   
   res = pd.DataFrame(index=models)
@@ -194,4 +194,50 @@ results_class4 = magic(models, 'class4')
 
 print(results_class4.to_markdown())
 
+```
+
+```{python}
+npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
+
+X = npf_train_test.drop(columns=['class2', 'class4'])
+y = npf_train_test['class4']
+rfc = RandomForestClassifier(criterion='gini')
+model = rfc.fit(X, y)
+
+predict_x = npf_test_clean.drop(columns='class4')
+#probas =  pd.DataFrame(model.predict_proba(predict_x))
+#probas
+probas = pd.DataFrame(predict_x.copy())
+
+
+def get_predict_proba(row, model):
+  probas = model.predict_proba(row.values.reshape(1,-1))
+  
+  #
+  # tää jäi kesken
+  #
+  
+  nonevent_p = probas[0][0]
+  event_p = 1-nonevent_p
+  #print(f'nonev: {nonevent_p}, event_sum: {event_p}, all: {probas}')
+    
+  ret = max(nonevent_p, event_p)
+  return ret 
+
+probas['proba'] = probas.apply(lambda row: get_predict_proba(row, model), axis=1)
+
+predicts = pd.DataFrame(model.predict(predict_x))
+
+final = predicts.merge(probas['proba'].to_frame(), left_index=True, right_index=True)
+
+final[0].replace([0, 1, 2, 3],["nonevent", "Ia", "Ib", "II"], inplace=True)
+```
+
+```{python}
+row0 = pd.DataFrame({0: 0.9, 'proba':''}, index =[0])
+row1 = pd.DataFrame({0: 'class4', 'proba':'p'}, index =[0])
+merged = pd.concat([row1, final])
+merged = pd.concat([row0, merged])
+
+merged.to_csv('answers.csv', index=False, header=False)
 ```
