@@ -3,8 +3,8 @@ title: "IML_project"
 author: "Heikki Nenonen"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ## Todo
@@ -35,7 +35,9 @@ output:
 
 -   plot
 
--   
+    ```{r include=FALSE}
+    library(reticulate)
+    ```
 
 ```{python}
 import pandas as pd
@@ -63,17 +65,12 @@ npf_train_test["class2"].replace(["event", "nonevent"],[1,0], inplace=True)
 npf_train_test["class4"].replace(["nonevent", "Ia", "Ib", "II"],[0, 1, 2, 3], inplace=True)
 
 
-npf_train_test
 ```
 
-```{python}
+First five columns and rows
 
-```
-
-```{python}
-# picks every other column
-seq = np.arange(0, npf_train_test.shape[1], 2)
-npf_train_test = npf_train_test.iloc[:,seq]
+```{r}
+knitr::kable(head(py$npf_train_test[,1:5]), row.names = TRUE, digits = 2)
 ```
 
 ```{python include=FALSE}
@@ -98,22 +95,6 @@ from sklearn.exceptions import ConvergenceWarning
 ```
 
 ```{python}
-#X = npf_train_test.drop(["class2"], axis=1)
-X = npf_train_test.drop(["class2", "class4"], axis=1)
-
-# Binary Classification 
-#y = npf_train_test["class2"]
-
-# Multi Classification
-y = npf_train_test["class4"]
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.9, random_state=40, shuffle=True, stratify=npf_train_test["class4"]
-)
-
-```
-
-```{python}
 #@ignore_warnings(category=ConvergenceWarning)
 def loss(X_tr, y_tr, X_te, y_te, m):
     return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
@@ -122,13 +103,16 @@ def loss(X_tr, y_tr, X_te, y_te, m):
 def accuracy(X_tr, y_tr, X_te, y_te, m):
     return accuracy_score(y_te, m.fit(X_tr, y_tr).predict(X_te))
 
-perplexity = lambda p: np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
+#def perplexity(p, y_test):
+#    return np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
+
+#perplexity = lambda p: np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
+
 ```
 
 ```{python include=FALSE}
-
 def magic(models, classtype):
-  X = npf_train_test.drop(["class2", "class4"], axis=1)
+  X = npf_train_test.drop(["class2", "class4"], axis=1, inplace=False)
   y = npf_train_test[classtype]
   X_train, X_test, y_train, y_test = train_test_split(
       X, y, train_size=0.9, random_state=40, shuffle=True, stratify=y
@@ -148,19 +132,17 @@ def magic(models, classtype):
   res["test_loss"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
   res["test_accuracy"] = [accuracy(X_train, y_train, X_test, y_test, m) for m in models]
   
-  ##
-  # spaghetti too stiff
-  ##
+  perplexity = lambda p: np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
   
   #temporary solution since svm is weird with perplexity, KEEP SVM LAST!!
-  #list = [perplexity(m.predict_proba(X_test)[:,1]) for m in models[0:-1]]
-  #res["test_perplexity1"]= np.append(list, 0)
+  list = [perplexity(m.predict_proba(X_test)[:,1]) for m in models[0:-1]]
+  res["test_perplexity1"]= np.append(list, 0)
   
   return res
 
 ```
 
-```{python}
+```{python include=FALSE}
 
 models = [DummyClassifier(), 
   LogisticRegression(penalty="l2", C=1_000, solver="lbfgs"), 
@@ -170,16 +152,28 @@ models = [DummyClassifier(),
   LogisticRegression(penalty="l1", C=1, solver="saga"),
   GaussianNB(),
   QuadraticDiscriminantAnalysis(),
-  RandomForestClassifier()
-  #KNeighborsClassifier(),
+  RandomForestClassifier(),
+  KNeighborsClassifier(),
+  make_pipeline(StandardScaler(), SVC(gamma='auto'))
+  ]
   #make_pipeline(StandardScaler(), SVC(gamma='auto'))
-  ] #  DummyRegressor(),
+ #  DummyRegressor(),
   
   
 results_class2 = magic(models, 'class2')
 results_class4 = magic(models, 'class4')
-print(results_class2.to_markdown())
-print(results_class4.to_markdown())
+```
+
+```{python}
+test = results_class2.reset_index()
+```
+
+```{r}
+knitr::kable(py$results_class2, row.names = TRUE, digits = 2)
+knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
+#as.matrix(py$test)
+#knitr::kable(py$test, digits = 2)
+
 ```
 
 ```{python}
