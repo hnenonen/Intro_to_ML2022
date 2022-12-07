@@ -29,6 +29,6 @@ __Work time tracking__
 |---------|:--:|:--:|:--:|:--:|:--:|------:|
 |Heikki   | 3  | 4  |    |    |    |       |
 |Arttu    |    | 4  |    |    |    |       |
-|Niko     |    | 4  |    |    |    |       |
+|Niko     |    | 4  |    | 4  |    |       |
 
 [Maybe useful links](https://docs.google.com/document/d/1rRjexs-sKE2jeW9bW9cJ2-LvkugPFBZ5OTmTD7TKSLA/edit)
