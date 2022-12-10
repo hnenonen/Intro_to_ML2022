@@ -1,11 +1,13 @@
 ---
-title: "IML_project"
-author: "Heikki Nenonen"
+title: "IML Project Report"
+author: "Heikki Nenonen, Arttu Koskinen, Niko Petjakko"
 date: "`r Sys.Date()`"
 output:
   pdf_document: default
   html_document: default
 ---
+
+Currently the report consists of the code for everything we've done, but lacks verbal explanations, which we're hoping to add in for the final report.
 
 ## Todo
 
@@ -29,15 +31,11 @@ output:
 
 -   ~~class4 -\> nonevent/1a/1b/II/ = 0,1,2,3~~
 
--   try normalising data - google if needed for RF
+-   ~~try normalising data - google if needed for RF~~ needed for PCA
 
--   try PCA
+-   try PCA (not implemented yet)
 
--   googlaa mahdollisia malleja
-
--   logreg/randomforest/qda with default parameters are best atm, maybe we can optimize
-
--   plot
+-   multiclass classifier tod.näkösyydet eivät näy atm
 
     ```{r include=FALSE}
     library(reticulate)
@@ -208,7 +206,7 @@ knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
 
 ```
 
-```{python}
+```{python include=FALSE}
 npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
 
 #DROPS STDS

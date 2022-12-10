@@ -1,11 +1,13 @@
 ---
-title: "IML_project"
-author: "Heikki Nenonen"
+title: "IML Project Report"
+author: "Heikki Nenonen, Arttu Koskinen, Niko Petjakko"
 date: "`r Sys.Date()`"
 output:
   pdf_document: default
   html_document: default
 ---
+
+Currently the report consists of the code for everything we've done, but lacks verbal explanations, which we're hoping to add in for the final report.
 
 ## Todo
 
