@@ -182,7 +182,11 @@ knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
 
 insight: we only compared parameters for class4
 
-**gini**/log_loss/entropy, number of trees=100
+Impurity measure determines how the decision trees are built in the random forest from the features in the dataset [book]. We noticed that gini gives the best accuracy, so we chose that.
+
+number of trees=100
+
+(default parameters for sklearn RandomForest)
 
 ```{python include=FALSE}
 #shows all columns 
