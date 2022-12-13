@@ -7,8 +7,6 @@ output:
   html_document: default
 ---
 
-Currently the report consists of the code for everything we've done, but lacks verbal explanations, which we're hoping to add in for the final report.
-
 ## Todo
 
 -   ~~dummy classifier~~
@@ -41,6 +39,8 @@ Currently the report consists of the code for everything we've done, but lacks v
     library(reticulate)
     ```
 
+    ### Read data
+
 ```{python}
 import pandas as pd
 import numpy as np
@@ -52,6 +52,8 @@ npf_train = pd.read_csv("initial_data/npf_train.csv")
 
 
 ```
+
+### Preprocess data
 
 ```{python echo=TRUE}
 
@@ -68,9 +70,9 @@ npf_train_test["class4"].replace(["nonevent", "Ia", "Ib", "II"],[0, 1, 2, 3], in
 
 #DROPS STDS
 npf_train_test = npf_train_test.filter(regex='mean|class4|class2')
-
-
 ```
+
+Stds didn't seem to affect the accuracies, and removal of them lightens the computation
 
 First five columns and rows
 
@@ -78,7 +80,11 @@ First five columns and rows
 knitr::kable(head(py$npf_train_test[,1:5]), row.names = TRUE, digits = 2)
 ```
 
-```{python include=FALSE}
+### Imports
+
+We chose to compare many of the models used in the course exercise sets
+
+```{python}
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression 
@@ -94,15 +100,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from sklearn.neighbors import KNeighborsClassifier
-
-from sklearn.decomposition import PCA
-
-#from sklearn.utils.testing import ignore_warnings
-from sklearn.exceptions import ConvergenceWarning
 ```
 
+### Functions for model loss & accuracy
+
 ```{python}
-#@ignore_warnings(category=ConvergenceWarning)
 def loss(X_tr, y_tr, X_te, y_te, m):
     return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
 
@@ -110,12 +112,9 @@ def loss(X_tr, y_tr, X_te, y_te, m):
 def accuracy(X_tr, y_tr, X_te, y_te, m):
     return accuracy_score(y_te, m.fit(X_tr, y_tr).predict(X_te))
 
-#def perplexity(p, y_test):
-#    return np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
-
-#perplexity = lambda p: np.exp(-np.mean(np.log(y_test*p + (1 - y_test) * (1 - p))))
-
 ```
+
+### Train, fit, evaluate 
 
 ```{python}
 
@@ -125,9 +124,8 @@ def magic(models, classtype):
   X = npf_train_test.drop(["class2", "class4"], axis=1, inplace=False)
   y = npf_train_test[classtype]
   X_train, X_test, y_train, y_test = train_test_split(
-      X, y, train_size=0.8, random_state=40, shuffle=True, stratify=y
+      X, y, train_size=0.8, random_state=38, shuffle=True, stratify=y
   )
-  
   
   res = pd.DataFrame(index=models)
   # Loss on training data, for model trained on training data:
@@ -147,11 +145,13 @@ def magic(models, classtype):
   
   #temporary solution since svm is weird with perplexity, KEEP SVM LAST!!
   list = [perplexity(m.predict_proba(X_test)[:,1]) for m in models[0:-1]]
-  res["test_perplexity1"]= np.append(list, 0)
+  res["test_perplexity"]= np.append(list, 0)
   
   return res
 
 ```
+
+### Define and compare models
 
 ```{python include=FALSE}
 
@@ -167,34 +167,34 @@ models = [DummyClassifier(),
   KNeighborsClassifier(),
   make_pipeline(StandardScaler(), SVC(gamma='auto'))
   ]
-  #make_pipeline(StandardScaler(), SVC(gamma='auto'))
- #  DummyRegressor(),
   
   
 results_class2 = magic(models, 'class2')
 results_class4 = magic(models, 'class4')
 ```
 
-```{python}
-test = results_class2.reset_index()
-```
-
 ```{r}
 knitr::kable(py$results_class2, row.names = TRUE, digits = 2)
 knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
-#as.matrix(py$test)
-#knitr::kable(py$test, digits = 2)
-
 ```
 
-```{python}
+### Compare different parameters for RandomForestClassifier: impurity measure and number of trees
+
+insight: we only compared parameters for class4
+
+**gini**/log_loss/entropy, number of trees=100
+
+```{python include=FALSE}
 #shows all columns 
 #required package tabulate 
 #print(res.to_markdown())
 models = [  
   RandomForestClassifier(criterion='gini'),
   RandomForestClassifier(criterion='log_loss'),
-  RandomForestClassifier(criterion='entropy')]
+  RandomForestClassifier(criterion='entropy'),
+  RandomForestClassifier(criterion='gini', n_estimators=50),
+  RandomForestClassifier(criterion='gini', n_estimators=250),
+  RandomForestClassifier(criterion='log_loss')]
   
 results_class4 = magic(models, 'class4')
 
@@ -206,16 +206,15 @@ knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
 
 ```
 
-```{python include=FALSE}
+### Final model
+
+We first train the model and classify events and nonevents (class2)
+
+```{python}
 npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
 
 #DROPS STDS
 npf_test_clean = npf_test_clean.filter(regex='mean|class4|class2')
-
-
-##
-#
-##
 
 X = npf_train_test.drop(columns=['class2', 'class4'])
 y = npf_train_test['class2']
@@ -232,10 +231,7 @@ def get_predict_proba(row, model):
   
   nonevent_p = probas[0][0]
   event_p = 1-nonevent_p
-  #print(np.sum(probas[0][1:]))
-  #print(f'nonev: {nonevent_p}, event_sum: {event_p}, all: {probas}')
-   
-  #ret = max(nonevent_p, event_p)
+  
   return event_p 
 
 probas['proba'] = probas.apply(lambda row: get_predict_proba(row, model), axis=1)
@@ -247,43 +243,38 @@ final = predicts.merge(probas['proba'].to_frame(), left_index=True, right_index=
 final[0].replace([0, 1],["nonevent", "event"], inplace=True)
 ```
 
+Then we train the multiclassifier using only rows that were classified as events
+
 ```{python}
 
 npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
 
-#DROPS STDS
+# DROPS STDS
 npf_test_clean = npf_test_clean.filter(regex='mean|class4|class2')
 
+# SELECT ROWS WHERE BINARY CLASSIFIER PREDICTED EVENTS AS TRAINING DATA
 npf_train_events = npf_train_test[npf_train_test['class2']==1]
+
 X = npf_train_events.drop(columns=['class2', 'class4'])
 y = npf_train_events['class4']
 rfc = RandomForestClassifier(criterion='gini')
 model = rfc.fit(X, y)
 
-
 predict_x = npf_test_clean.loc[final[final[0]=='event'].index].drop(columns='class4')
 
-#final[final[0]=='event'].index
-
-#probas['proba'] = probas.apply(lambda row: get_predict_proba(row, model), axis=1)
-
 predicts = pd.DataFrame(model.predict(predict_x))
-
 
 predicts[0].replace([1, 2, 3],["Ia", "Ib", "II"], inplace=True)
 
 i = 0
 for index, row in final.iterrows():
   if row[0]=='event':
-    #print(f'i: {i}, predict: {predicts.iloc[i,0]}')
-    #row[0] = predicts.iloc[i,0]
     final.at[index, 0] = predicts.iloc[i,0]
     i += 1
   
-#final = predicts.merge(probas['proba'].to_frame(), left_index=True, right_index=True)
-#final[0].replace([0, 1, 2, 3],["nonevent", "Ia", "Ib", "II"], inplace=True)
-
 ```
+
+Save answers.csv
 
 ```{python}
 row0 = pd.DataFrame({0: 0.9, 'proba':''}, index =[0])
@@ -293,3 +284,17 @@ merged = pd.concat([row0, merged])
 
 merged.to_csv('answers.csv', index=False, header=False)
 ```
+
+### Why the good accuracy?
+
+Although random forest bootstraps, we probably got lucky since randomness is involved
+
+## References
+
+<https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html>
+
+<https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html>
+
+<https://scikit-learn.org/stable/modules/multiclass.html>
+
+Course book
