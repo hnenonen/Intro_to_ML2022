@@ -4,7 +4,10 @@ author: "Heikki Nenonen, Arttu Koskinen, Niko Petjakko"
 date: "`r Sys.Date()`"
 output:
   html_document: 
-    theme: journal
+    df_print: paged
+    theme: cerulean
+    highlight: haddock
+    code_fold: show
   pdf_document: default
 ---
 
@@ -219,7 +222,7 @@ knitr::kable(results_class4, row.names = TRUE, digits = 2)
 
 We first train the model and classify events and nonevents (class2)
 
-```{python eval=FALSE}
+```{python results='hide'}
 npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
 
 #DROPS STDS
@@ -254,7 +257,7 @@ final[0].replace([0, 1],["nonevent", "event"], inplace=True)
 
 Then we train the multiclassifier using only rows that were classified as events
 
-```{python}
+```{python results='hide'}
 
 npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
 
