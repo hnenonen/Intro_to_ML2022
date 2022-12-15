@@ -2016,31 +2016,8 @@ display: none;
 </div>
 
 
-<div id="todo" class="section level2">
-<h2>Todo</h2>
-<ul>
-<li><p><del>dummy classifier</del></p></li>
-<li><p><del>class4 -&gt; event/nonevent, week1 exe?</del></p></li>
-<li><p><del>drop partlybad, pelkkää FALSEa</del></p></li>
-<li><p><strong>varianssit mukana/ei mukana? ei one hot -&gt;
-yksinkertaistaa liikaa ja tarkoitettu kategoriseen
-dataan</strong></p></li>
-<li><p><del>date? paljon informaatiota, mutta halutaanko muuttujaksi
-&lt;- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - -
-date, jätetäänkö pois? good riddance!</del></p></li>
-<li><p><del>train, test, cv-10?</del></p></li>
-<li><p><del>itse logisticregression, week2 exe1 &lt;-
-lasso/ridge</del></p></li>
-<li><p><del>accuracy, perplexity, week2 exe1</del></p></li>
-<li><p>accuracy of our accuracy? &lt;– malli train+test, vähän parempi
-kuin pelkkä train?</p></li>
-<li><p><del>class4 -&gt; nonevent/1a/1b/II/ = 0,1,2,3</del></p></li>
-<li><p><del>try normalising data - google if needed for RF</del> needed
-for PCA</p></li>
-<li><p>try PCA (not implemented yet)</p></li>
-<li><p>multiclass classifier tod.näkösyydet eivät näy atm</p>
-<h3 id="read-data">Read data</h3></li>
-</ul>
+<div id="read-data" class="section level3">
+<h3>Read data</h3>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2048,8 +2025,9 @@ for PCA</p></li>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>npf_test <span class="op">=</span> pd.read_csv(<span class="st">&quot;initial_data/npf_test_hidden.csv&quot;</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>npf_train <span class="op">=</span> pd.read_csv(<span class="st">&quot;initial_data/npf_train.csv&quot;</span>)</span></code></pre></div>
-<div id="preprocess-data" class="section level3">
-<h3>Preprocess data</h3>
+</div>
+<div id="preprocess-data-feature-selection" class="section level3">
+<h3>Preprocess data &amp; Feature selection</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>npf_train_test <span class="op">=</span> npf_train.set_index(<span class="st">&quot;date&quot;</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>npf_train_test <span class="op">=</span> npf_train_test.drop([<span class="st">&#39;id&#39;</span>, <span class="st">&#39;partlybad&#39;</span>], axis<span class="op">=</span><span class="dv">1</span>)</span>
@@ -2062,10 +2040,10 @@ for PCA</p></li>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>npf_train_test[<span class="st">&quot;class2&quot;</span>].replace([<span class="st">&quot;event&quot;</span>, <span class="st">&quot;nonevent&quot;</span>],[<span class="dv">1</span>,<span class="dv">0</span>], inplace<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>npf_train_test[<span class="st">&quot;class4&quot;</span>].replace([<span class="st">&quot;nonevent&quot;</span>, <span class="st">&quot;Ia&quot;</span>, <span class="st">&quot;Ib&quot;</span>, <span class="st">&quot;II&quot;</span>],[<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>], inplace<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#DROPS STDS</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#DROPS STANDARD DEVIATIONS (STD)</span></span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>npf_train_test <span class="op">=</span> npf_train_test.<span class="bu">filter</span>(regex<span class="op">=</span><span class="st">&#39;mean|class4|class2&#39;</span>)</span></code></pre></div>
-<p>Stds didn’t seem to affect the accuracies, and removal of them
-lightens the computation</p>
+<p>As standard deviations didn’t affect the accuracy, we decided to not
+use them for training the models.</p>
 <p>First five columns and rows</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(py<span class="sc">$</span>npf_train_test[,<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]), <span class="at">row.names =</span> <span class="cn">TRUE</span>, <span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div>
 <table>
@@ -2302,7 +2280,7 @@ Logistic3
 0.34
 </td>
 <td style="text-align:right;">
-0.88
+0.89
 </td>
 <td style="text-align:right;">
 1.37
@@ -2396,16 +2374,16 @@ RF
 0.00
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.32
+0.31
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.27
+0.33
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.91
+0.90
 </td>
 <td style="text-align:right;font-weight: bold;">
-1.26
+1.27
 </td>
 </tr>
 <tr>
@@ -2531,7 +2509,7 @@ Logistic2
 0.63
 </td>
 <td style="text-align:right;">
-1.55
+1.53
 </td>
 </tr>
 <tr>
@@ -2545,13 +2523,13 @@ Logistic3
 1.23
 </td>
 <td style="text-align:right;">
-1.12
+1.11
 </td>
 <td style="text-align:right;">
 0.63
 </td>
 <td style="text-align:right;">
-1.54
+1.52
 </td>
 </tr>
 <tr>
@@ -2588,10 +2566,10 @@ Logistic5
 1.12
 </td>
 <td style="text-align:right;">
-0.65
+0.63
 </td>
 <td style="text-align:right;">
-1.56
+1.52
 </td>
 </tr>
 <tr>
@@ -2639,19 +2617,19 @@ Inf
 RF
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.00
+0.16
 </td>
 <td style="text-align:right;font-weight: bold;">
-1.03
+1.02
 </td>
 <td style="text-align:right;font-weight: bold;">
-1.09
+1.06
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.68
+0.72
 </td>
 <td style="text-align:right;font-weight: bold;">
-1.39
+1.52
 </td>
 </tr>
 <tr>
@@ -2697,15 +2675,33 @@ NaN
 </tbody>
 </table>
 </div>
+<div id="classification-with-random-forest-james-et-al." class="section level3">
+<h3>Classification with random forest (James et al.)</h3>
+<p><strong>Random forest is a combination of bagging (bootstrap +
+aggregation) multiple decision trees and decorrelating them to explore
+the model space more thoroughly. Sklearn’s RandomForestClassifier
+inherently supports multiclass classification, so therefore we could
+straightforwardly use it for both of the classification
+problems.</strong></p>
+<p>Decision tree is a binary tree that splits the training data,
+minimizing the impurity at each split as measured by some
+<code>criterion</code>, and ends up in leaf nodes, where only a single
+class is present. Bootstrap creates <code>n_estimators</code> new trees
+from randomly sampled rows of the training data set. At each split,
+decorrelation is achieved by sampling <span class="math inline">\(m\)</span> predictors for the splits to use.
+Finally, the predictions made by the trees are aggregated through
+majority vote to output the predicted class.</p>
+<p>With a sufficient number of trees, the bagging prevents overfitting,
+but may still get stuck in local optima. The addition of decorrelating
+avoids this downside, reducing test and OOB (out-of-bag) errors.</p>
+</div>
 <div id="compare-different-parameters-for-randomforestclassifier-impurity-measure-and-number-of-trees" class="section level3">
 <h3>Compare different parameters for RandomForestClassifier: impurity
 measure and number of trees</h3>
-<p>insight: we only compared parameters for class4</p>
-<p>Impurity measure determines how the decision trees are built in the
-random forest from the features in the dataset [book]. We noticed that
-gini gives the best accuracy, so we chose that.</p>
-<p>number of trees=100</p>
-<p>(default parameters for sklearn RandomForest)</p>
+<p>For the impurity measure (<code>criterion</code>) we chose Gini
+index, and for number of trees (<code>n_estimators</code>) 100, as these
+produced the best accuracy. These just so happen to be the default
+parameters for the implementation of RandomForest in Sklearn.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>results_class4 <span class="ot">&lt;-</span> py<span class="sc">$</span>results_class4</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(results_class4) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&#39;gini&#39;</span>, <span class="st">&#39;log_loss&#39;</span>,<span class="st">&#39;entropy&#39;</span>,<span class="st">&#39;gini n=50&#39;</span>, <span class="st">&#39;gini n=250&#39;</span>, <span class="st">&#39;useless&#39;</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(results_class4, <span class="at">row.names =</span> <span class="cn">TRUE</span>, <span class="at">digits =</span> <span class="dv">2</span>)<span class="sc">%&gt;%</span><span class="fu">kable_styling</span>()<span class="sc">%&gt;%</span><span class="fu">row_spec</span>(<span class="dv">1</span>,<span class="at">bold=</span>T,<span class="at">hline_after =</span> T)</span></code></pre></div>
@@ -2740,16 +2736,16 @@ gini
 0
 </td>
 <td style="text-align:right;font-weight: bold;">
-1.02
+1.01
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.98
+1.04
 </td>
 <td style="text-align:right;font-weight: bold;">
-0.71
+0.72
 </td>
 <td style="text-align:right;font-weight: bold;">
-1.42
+1.43
 </td>
 </tr>
 <tr>
@@ -2760,16 +2756,16 @@ log_loss
 0
 </td>
 <td style="text-align:right;">
-1.01
-</td>
-<td style="text-align:right;">
 1.04
 </td>
 <td style="text-align:right;">
-0.72
+1.06
 </td>
 <td style="text-align:right;">
-1.43
+0.70
+</td>
+<td style="text-align:right;">
+1.39
 </td>
 </tr>
 <tr>
@@ -2780,16 +2776,16 @@ entropy
 0
 </td>
 <td style="text-align:right;">
-0.98
+1.03
 </td>
 <td style="text-align:right;">
-1.13
+1.09
 </td>
 <td style="text-align:right;">
-0.73
+0.70
 </td>
 <td style="text-align:right;">
-1.51
+1.41
 </td>
 </tr>
 <tr>
@@ -2800,16 +2796,16 @@ gini n=50
 0
 </td>
 <td style="text-align:right;">
-1.01
+1.03
 </td>
 <td style="text-align:right;">
-1.09
+0.98
 </td>
 <td style="text-align:right;">
 0.73
 </td>
 <td style="text-align:right;">
-1.46
+1.52
 </td>
 </tr>
 <tr>
@@ -2820,7 +2816,7 @@ gini n=250
 0
 </td>
 <td style="text-align:right;">
-1.02
+1.00
 </td>
 <td style="text-align:right;">
 0.99
@@ -2829,7 +2825,7 @@ gini n=250
 0.71
 </td>
 <td style="text-align:right;">
-1.50
+1.42
 </td>
 </tr>
 <tr>
@@ -2840,13 +2836,13 @@ useless
 0
 </td>
 <td style="text-align:right;">
-1.05
+0.99
 </td>
 <td style="text-align:right;">
-1.02
+1.06
 </td>
 <td style="text-align:right;">
-0.73
+0.70
 </td>
 <td style="text-align:right;">
 NaN
@@ -2924,32 +2920,44 @@ classified as events</p>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>merged.to_csv(<span class="st">&#39;answers.csv&#39;</span>, index<span class="op">=</span><span class="va">False</span>, header<span class="op">=</span><span class="va">False</span>)</span></code></pre></div>
 </div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
 <div id="why-the-good-accuracy" class="section level3">
 <h3>Why the good accuracy?</h3>
 <p>Challenge set binary accuracy <span class="math inline">\(\approx
 88\%\)</span>, multi <span class="math inline">\(\approx
 71\%\)</span></p>
-<p>Although random forest bootstraps, we probably got lucky since
-randomness is involved</p>
+<p>Random forest has randomness involved and we got lucky, we used the
+default parameters after all</p>
 <div id="why-infinite-perplexity" class="section level4">
 <h4>Why infinite perplexity?</h4>
 <p>Some points in the test set probably got assigned 0% probability
 (either outliers or then the model is not general enough?)</p>
 </div>
-<div id="what-would-have-we-done-different" class="section level4">
-<h4>What would have we done different?</h4>
-<p>More EDA?</p>
-<p>Would have tried PCA if had time (some tests suggested that it could
-have improved test accuracy)</p>
+<div id="what-could-we-have-done-differently" class="section level4">
+<h4>What could we have done differently?</h4>
+<ul>
+<li><p>More EDA (e.g., seaborn pairwise)</p></li>
+<li><p>Would have tried PCA if had time (some tests suggested that it
+could have improved test accuracy)</p></li>
+<li><p>Set random_state for the RF model as well to make the results
+reproducible</p></li>
+<li><p>Use a systematic process to try out different random states for
+both the data split and the models themselves</p></li>
+<li><p>After the model was chosen, we only compared parameters for
+class4, while we could have also done it for class2</p></li>
+</ul>
 </div>
 </div>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
+<p>Course book by James et al.</p>
 <p><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html" class="uri">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a></p>
 <p><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html" class="uri">https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html</a></p>
 <p><a href="https://scikit-learn.org/stable/modules/multiclass.html" class="uri">https://scikit-learn.org/stable/modules/multiclass.html</a></p>
-<p>Course book</p>
+<p><a href="https://www3.nd.edu/~dchiang/teaching/nlp/2016/notes/chapter5v5.pdf" class="uri">https://www3.nd.edu/~dchiang/teaching/nlp/2016/notes/chapter5v5.pdf</a>
+(inf perplexity)</p>
 </div>
 
 

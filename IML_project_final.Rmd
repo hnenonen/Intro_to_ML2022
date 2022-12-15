@@ -3,47 +3,19 @@ title: "IML Project Report"
 author: "Heikki Nenonen, Arttu Koskinen, Niko Petjakko"
 date: "`r Sys.Date()`"
 output:
+  pdf_document: default
   html_document: 
     df_print: paged
     theme: cerulean
     highlight: haddock
     code_fold: show
-  pdf_document: default
 ---
-
-## Todo
-
--   ~~dummy classifier~~
-
--   ~~class4 -\> event/nonevent, week1 exe?~~
-
--   ~~drop partlybad, pelkkää FALSEa~~
-
--   **varianssit mukana/ei mukana? ei one hot -\> yksinkertaistaa liikaa ja tarkoitettu kategoriseen dataan**
-
--   ~~date? paljon informaatiota, mutta halutaanko muuttujaksi \<- opeta 2000-2008, testaa 2009-2011 / kysy slack test_hidden ei - - date, jätetäänkö pois? good riddance!~~
-
--   ~~train, test, cv-10?~~
-
--   ~~itse logisticregression, week2 exe1 \<- lasso/ridge~~
-
--   ~~accuracy, perplexity, week2 exe1~~
-
--   accuracy of our accuracy? \<-- malli train+test, vähän parempi kuin pelkkä train?
-
--   ~~class4 -\> nonevent/1a/1b/II/ = 0,1,2,3~~
-
--   ~~try normalising data - google if needed for RF~~ needed for PCA
-
--   try PCA (not implemented yet)
-
--   multiclass classifier tod.näkösyydet eivät näy atm
 
     ```{r include=FALSE}
     library(reticulate)
     ```
 
-    ### Read data
+### Read data
 
 ```{python}
 import pandas as pd
@@ -57,7 +29,7 @@ npf_train = pd.read_csv("initial_data/npf_train.csv")
 
 ```
 
-### Preprocess data
+### Preprocess data & Feature selection
 
 ```{python echo=TRUE}
 
@@ -72,11 +44,11 @@ npf_train_test.insert(loc=0, column="class2", value=class2)
 npf_train_test["class2"].replace(["event", "nonevent"],[1,0], inplace=True)
 npf_train_test["class4"].replace(["nonevent", "Ia", "Ib", "II"],[0, 1, 2, 3], inplace=True)
 
-#DROPS STDS
+#DROPS STANDARD DEVIATIONS (STD)
 npf_train_test = npf_train_test.filter(regex='mean|class4|class2')
 ```
 
-Stds didn't seem to affect the accuracies, and removal of them lightens the computation
+As standard deviations didn't affect the accuracy, we decided to not use them for training the models.
 
 First five columns and rows
 
@@ -194,19 +166,13 @@ knitr::kable(results_class4, row.names = TRUE, digits = 2)%>%kable_styling()%>%r
 
 **Random forest is a combination of bagging (bootstrap + aggregation) multiple decision trees and decorrelating them to explore the model space more thoroughly. Sklearn's RandomForestClassifier inherently supports multiclass classification, so therefore we could straightforwardly use it for both of the classification problems.**
 
-Decision tree is a binary tree that splits the training data, maximizing the quality at each split as measured by some ```criterion```, and ends up in leaf nodes, where only a single class is present. Bootstrap creates ```n_estimators``` new trees from randomly sampled rows of the training data set. At each split, decorrelation is achieved by sampling $m$ predictors for the splits to use. Finally, the predictions made by the trees are aggregated through majority vote to output the predicted class.
+Decision tree is a binary tree that splits the training data, minimizing the impurity at each split as measured by some `criterion`, and ends up in leaf nodes, where only a single class is present. Bootstrap creates `n_estimators` new trees from randomly sampled rows of the training data set. At each split, decorrelation is achieved by sampling $m$ predictors for the splits to use. Finally, the predictions made by the trees are aggregated through majority vote to output the predicted class.
 
 With a sufficient number of trees, the bagging prevents overfitting, but may still get stuck in local optima. The addition of decorrelating avoids this downside, reducing test and OOB (out-of-bag) errors.
 
 ### Compare different parameters for RandomForestClassifier: impurity measure and number of trees
 
-insight: we only compared parameters for class4
-
-Impurity measure determines how the decision trees are built in the random forest from the features in the dataset [book]. We noticed that gini gives the best accuracy, so we chose that.
-
-number of trees=100
-
-(default parameters for sklearn RandomForest)
+For the impurity measure (`criterion`) we chose Gini index, and for number of trees (`n_estimators`) 100, as these produced the best accuracy. These just so happen to be the default parameters for the implementation of RandomForest in Sklearn.
 
 ```{python include=FALSE}
 models = [  
@@ -308,23 +274,33 @@ merged = pd.concat([row0, merged])
 merged.to_csv('answers.csv', index=False, header=False)
 ```
 
+## Conclusions
+
 ### Why the good accuracy?
 
 Challenge set binary accuracy $\approx 88\%$, multi $\approx 71\%$
 
-Although random forest bootstraps, we probably got lucky since randomness is involved
+Random forest has randomness involved and we got lucky, we used the default parameters after all
 
 #### Why infinite perplexity?
 
 Some points in the test set probably got assigned 0% probability (either outliers or then the model is not general enough?)
 
-#### What would have we done different?
+#### What could we have done differently?
 
-More EDA?
+-   More EDA (e.g., seaborn pairwise)
 
-Would have tried PCA if had time (some tests suggested that it could have improved test accuracy)
+-   Would have tried PCA if had time (some tests suggested that it could have improved test accuracy)
+
+-   Set random_state for the RF model as well to make the results reproducible
+
+-   Use a systematic process to try out different random states for both the data split and the models themselves
+
+-   After the model was chosen, we only compared parameters for class4, while we could have also done it for class2
 
 ## References
+
+Course book by James et al.
 
 <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html>
 
@@ -332,4 +308,4 @@ Would have tried PCA if had time (some tests suggested that it could have improv
 
 <https://scikit-learn.org/stable/modules/multiclass.html>
 
-Course book
+<https://www3.nd.edu/~dchiang/teaching/nlp/2016/notes/chapter5v5.pdf> (inf perplexity)
