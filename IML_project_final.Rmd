@@ -3,8 +3,9 @@ title: "IML Project Report"
 author: "Heikki Nenonen, Arttu Koskinen, Niko Petjakko"
 date: "`r Sys.Date()`"
 output:
+  html_document: 
+    theme: journal
   pdf_document: default
-  html_document: default
 ---
 
 ## Todo
@@ -114,7 +115,7 @@ def accuracy(X_tr, y_tr, X_te, y_te, m):
 
 ```
 
-### Train, fit, evaluate 
+### Train, fit, evaluate
 
 ```{python}
 
@@ -174,8 +175,13 @@ results_class4 = magic(models, 'class4')
 ```
 
 ```{r}
-knitr::kable(py$results_class2, row.names = TRUE, digits = 2)
-knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
+results_class2 <- py$results_class2
+rownames(results_class2) <- c('Dummy','Logistic1','Logistic2','Logistic3','Logistic4','Logistic5','GausNB','QDA', 'RF', 'KN', 'SVM')
+results_class4 <- py$results_class4
+rownames(results_class4) <- c('Dummy','Logistic1','Logistic2','Logistic3','Logistic4','Logistic5','GausNB','QDA', 'RF', 'KN', 'SVM')
+
+knitr::kable(results_class2, row.names = TRUE, digits = 2)
+knitr::kable(results_class4, row.names = TRUE, digits = 2)
 ```
 
 ### Compare different parameters for RandomForestClassifier: impurity measure and number of trees
@@ -189,9 +195,6 @@ number of trees=100
 (default parameters for sklearn RandomForest)
 
 ```{python include=FALSE}
-#shows all columns 
-#required package tabulate 
-#print(res.to_markdown())
 models = [  
   RandomForestClassifier(criterion='gini'),
   RandomForestClassifier(criterion='log_loss'),
@@ -206,7 +209,9 @@ results_class4 = magic(models, 'class4')
 ```
 
 ```{r}
-knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
+results_class4 <- py$results_class4
+rownames(results_class4) <- c('gini', 'log_loss','entropy','gini n=50', 'gini n=250', 'useless')
+knitr::kable(results_class4, row.names = TRUE, digits = 2)
 
 ```
 
@@ -214,7 +219,7 @@ knitr::kable(py$results_class4, row.names = TRUE, digits = 2)
 
 We first train the model and classify events and nonevents (class2)
 
-```{python}
+```{python eval=FALSE}
 npf_test_clean = npf_test.drop(['id', 'partlybad', 'date'], axis=1)
 
 #DROPS STDS
@@ -280,7 +285,7 @@ for index, row in final.iterrows():
 
 Save answers.csv
 
-```{python}
+```{python eval=FALSE}
 row0 = pd.DataFrame({0: 0.9, 'proba':''}, index =[0])
 row1 = pd.DataFrame({0: 'class4', 'proba':'p'}, index =[0])
 merged = pd.concat([row1, final])
@@ -291,7 +296,19 @@ merged.to_csv('answers.csv', index=False, header=False)
 
 ### Why the good accuracy?
 
+Challenge set binary accuracy $\approx 88\%$, multi $\approx 71\%$
+
 Although random forest bootstraps, we probably got lucky since randomness is involved
+
+#### Why infinite perplexity?
+
+Some points in the test set probably got assigned 0% probability (either outliers or then the model is not general enough?)
+
+#### What would have we done different?
+
+More EDA?
+
+Would have tried PCA if had time (some tests suggested that it could have improved test accuracy)
 
 ## References
 
