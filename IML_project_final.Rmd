@@ -190,6 +190,14 @@ knitr::kable(results_class2, row.names = TRUE, digits = 2)%>%kable_styling()%>%r
 knitr::kable(results_class4, row.names = TRUE, digits = 2)%>%kable_styling()%>%row_spec(9,bold=T,hline_after = T)
 ```
 
+### Classification with random forest (James et al.)
+
+**Random forest is a combination of bagging (bootstrap + aggregation) multiple decision trees and decorrelating them to explore the model space more thoroughly. Sklearn's RandomForestClassifier inherently supports multiclass classification, so therefore we could straightforwardly use it for both of the classification problems.**
+
+Decision tree is a binary tree that splits the training data, maximizing the quality at each split as measured by some ```criterion```, and ends up in leaf nodes, where only a single class is present. Bootstrap creates ```n_estimators``` new trees from randomly sampled rows of the training data set. At each split, decorrelation is achieved by sampling $m$ predictors for the splits to use. Finally, the predictions made by the trees are aggregated through majority vote to output the predicted class.
+
+With a sufficient number of trees, the bagging prevents overfitting, but may still get stuck in local optima. The addition of decorrelating avoids this downside, reducing test and OOB (out-of-bag) errors.
+
 ### Compare different parameters for RandomForestClassifier: impurity measure and number of trees
 
 insight: we only compared parameters for class4
