@@ -128,7 +128,7 @@ def magic(models, classtype):
   X = npf_train_test.drop(["class2", "class4"], axis=1, inplace=False)
   y = npf_train_test[classtype]
   X_train, X_test, y_train, y_test = train_test_split(
-      X, y, train_size=0.8, random_state=38, shuffle=True, stratify=y
+      X, y, train_size=0.8, random_state=41, shuffle=True, stratify=y
   )
   
   res = pd.DataFrame(index=models)
@@ -149,7 +149,7 @@ def magic(models, classtype):
   
   #temporary solution since svm is weird with perplexity, KEEP SVM LAST!!
   list = [perplexity(m.predict_proba(X_test)[:,1]) for m in models[0:-1]]
-  res["test_perplexity"]= np.append(list, 0)
+  res["test_perplexity"]= np.append(list, np.nan)
   
   return res
 
@@ -177,14 +177,17 @@ results_class2 = magic(models, 'class2')
 results_class4 = magic(models, 'class4')
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 results_class2 <- py$results_class2
 rownames(results_class2) <- c('Dummy','Logistic1','Logistic2','Logistic3','Logistic4','Logistic5','GausNB','QDA', 'RF', 'KN', 'SVM')
 results_class4 <- py$results_class4
 rownames(results_class4) <- c('Dummy','Logistic1','Logistic2','Logistic3','Logistic4','Logistic5','GausNB','QDA', 'RF', 'KN', 'SVM')
 
-knitr::kable(results_class2, row.names = TRUE, digits = 2)
-knitr::kable(results_class4, row.names = TRUE, digits = 2)
+library(kableExtra)
+library(tidyverse)
+
+knitr::kable(results_class2, row.names = TRUE, digits = 2)%>%kable_styling()%>%row_spec(9,bold=T,hline_after = T)
+knitr::kable(results_class4, row.names = TRUE, digits = 2)%>%kable_styling()%>%row_spec(9,bold=T,hline_after = T)
 ```
 
 ### Compare different parameters for RandomForestClassifier: impurity measure and number of trees
@@ -214,7 +217,7 @@ results_class4 = magic(models, 'class4')
 ```{r}
 results_class4 <- py$results_class4
 rownames(results_class4) <- c('gini', 'log_loss','entropy','gini n=50', 'gini n=250', 'useless')
-knitr::kable(results_class4, row.names = TRUE, digits = 2)
+knitr::kable(results_class4, row.names = TRUE, digits = 2)%>%kable_styling()%>%row_spec(1,bold=T,hline_after = T)
 
 ```
 
