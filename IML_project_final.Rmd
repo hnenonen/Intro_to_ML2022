@@ -48,17 +48,19 @@ npf_train_test["class4"].replace(["nonevent", "Ia", "Ib", "II"],[0, 1, 2, 3], in
 npf_train_test = npf_train_test.filter(regex='mean|class4|class2')
 ```
 
-As standard deviations didn't affect the accuracy, we decided to not use them for training the models.
+As standard deviations didn't affect the accuracy, we decided to exclude them when training the models. 
 
-First five columns and rows
+The following table shows the first five columns and rows of our data.
 
 ```{r}
 knitr::kable(head(py$npf_train_test[,1:5]), row.names = TRUE, digits = 2)
 ```
 
+Only the means were chosen as features, and the data was not normalized.
+
 ### Imports
 
-We chose to compare many of the models used in the course exercise sets
+We compared some of the models we encountered during the course.
 
 ```{python}
 from sklearn.dummy import DummyClassifier
@@ -91,6 +93,8 @@ def accuracy(X_tr, y_tr, X_te, y_te, m):
 ```
 
 ### Train, fit, evaluate
+
+We use the common 80:20 train-test split, although it might not be the optimal ratio for classification, as a recent study shows it is not optimal for regression. We also set the ```random_state``` to make the results reproducible.
 
 ```{python}
 
@@ -127,7 +131,9 @@ def magic(models, classtype):
 
 ```
 
-### Define and compare models
+## Define and compare models
+
+We began the experimentation with logistic regression and different parameters.
 
 ```{python include=FALSE}
 
@@ -149,6 +155,8 @@ results_class2 = magic(models, 'class2')
 results_class4 = magic(models, 'class4')
 ```
 
+
+
 ```{r warning=FALSE, message=FALSE}
 results_class2 <- py$results_class2
 rownames(results_class2) <- c('Dummy','Logistic1','Logistic2','Logistic3','Logistic4','Logistic5','GausNB','QDA', 'RF', 'KN', 'SVM')
@@ -157,22 +165,32 @@ rownames(results_class4) <- c('Dummy','Logistic1','Logistic2','Logistic3','Logis
 
 library(kableExtra)
 library(tidyverse)
+```
 
+### Binary classification (class2)
+
+```{r warning=FALSE, message=FALSE}
 knitr::kable(results_class2, row.names = TRUE, digits = 2)%>%kable_styling()%>%row_spec(9,bold=T,hline_after = T)
+```
+
+### Multiclass classification (class4)
+
+```{r warning=FALSE, message=FALSE}
 knitr::kable(results_class4, row.names = TRUE, digits = 2)%>%kable_styling()%>%row_spec(9,bold=T,hline_after = T)
 ```
 
-### Classification with random forest (James et al.)
+As we can see, many models produce good results, but random forest had the highest accuracy by a small margin.
 
-**Random forest is a combination of bagging (bootstrap + aggregation) multiple decision trees and decorrelating them to explore the model space more thoroughly. Sklearn's RandomForestClassifier inherently supports multiclass classification, so therefore we could straightforwardly use it for both of the classification problems.**
+## Classification with random forest (James et al.)
+
+**Random forest is an ensemble method consisting of bagging** (bootstrap + aggregation) **multiple decision trees and decorrelating them to explore the model space more thoroughly. The ```RandomForestClassifier``` implemented in Sklearn inherently supports multiclass classification, so therefore, we could straightforwardly use it for both of the classification problems.**
 
 Decision tree is a binary tree that splits the training data, minimizing the impurity at each split as measured by some `criterion`, and ends up in leaf nodes, where only a single class is present. Bootstrap creates `n_estimators` new trees from randomly sampled rows of the training data set. At each split, decorrelation is achieved by sampling $m$ predictors for the splits to use. Finally, the predictions made by the trees are aggregated through majority vote to output the predicted class.
 
 With a sufficient number of trees, the bagging prevents overfitting, but may still get stuck in local optima. The addition of decorrelating avoids this downside, reducing test and OOB (out-of-bag) errors.
 
-### Compare different parameters for RandomForestClassifier: impurity measure and number of trees
-
-For the impurity measure (`criterion`) we chose Gini index, and for number of trees (`n_estimators`) 100, as these produced the best accuracy. These just so happen to be the default parameters for the implementation of RandomForest in Sklearn.
+### RandomForestClassifier with different parameters
+<!-- Compare different parameters for RandomForestClassifier: impurity measure and number of trees -->
 
 ```{python include=FALSE}
 models = [  
@@ -195,7 +213,13 @@ knitr::kable(results_class4, row.names = TRUE, digits = 2)%>%kable_styling()%>%r
 
 ```
 
-### Final model
+For our parameters, we chose the Gini index as the impurity measure (`criterion`) and set the number of trees (`n_estimators`) at 100, as these produced the best accuracy. These just so happen to be the default parameters for the Sklearn implementation of RandomForest.
+
+## Final models
+
+For both binary and multiclass classification, we use all the available data, including what was previously reserved for testing.
+
+### Binary classification (class2)
 
 We first train the model and classify events and nonevents (class2)
 
@@ -232,7 +256,12 @@ final = predicts.merge(probas['proba'].to_frame(), left_index=True, right_index=
 final[0].replace([0, 1],["nonevent", "event"], inplace=True)
 ```
 
-Then we train the multiclassifier using only rows that were classified as events
+### Multiclass classification (class4)
+
+Our multiclass classifier utilizes the above binary classification, relying on the predictions it has made. It is trained using only the rows that were classified as events while ignoring the nonevents. This means that **only the results which have already been classified as events are reclassified as different types of events**.
+
+<!-- Therefore, our multiclass classifier is a combination of the binary classifier and a multiclass classifier. -->
+
 
 ```{python results='hide'}
 
@@ -263,9 +292,8 @@ for index, row in final.iterrows():
   
 ```
 
-Save answers.csv
-
 ```{python eval=FALSE}
+# Save answers.csv
 row0 = pd.DataFrame({0: 0.9, 'proba':''}, index =[0])
 row1 = pd.DataFrame({0: 'class4', 'proba':'p'}, index =[0])
 merged = pd.concat([row1, final])
@@ -274,33 +302,37 @@ merged = pd.concat([row0, merged])
 merged.to_csv('answers.csv', index=False, header=False)
 ```
 
-## Conclusions
+## Conclusion
 
 ### Why the good accuracy?
 
-Challenge set binary accuracy $\approx 88\%$, multi $\approx 71\%$
+(For the challenge set: binary accuracy $\approx 88\%$ and multiclass accuracy $\approx 71\%$)
 
-Random forest has randomness involved and we got lucky, we used the default parameters after all
+Although linear regression did perform well, decision trees may perform better, when the relationship between the features and the response is non-linear and complex (James et al.). Random forest substantially mitigates the downsides of decision trees as well. **Therefore, it seems that the relationship between the features and the response was non-linear and complex enough to slightly favor random forest over "classical approaches".**
 
-#### Why infinite perplexity?
+<!-- Bagging is an improvement over a single decision tree, and random forest is an improvement over bagging. -->
+
+**Random forest includes randomization in the sampling of both the observations and the features, which makes us think we got lucky with the random state.**
+
+### Why infinite perplexity?
 
 Some points in the test set probably got assigned 0% probability (either outliers or then the model is not general enough?)
 
-#### What could we have done differently?
+### What could we have done differently?
 
--   More EDA (e.g., seaborn pairwise)
+-   More EDA (e.g., seaborn pairwise) to further inform feature and model selection
 
--   Would have tried PCA if had time (some tests suggested that it could have improved test accuracy)
+-   We would have pursued PCA further if we had more time on our hands, as some tests suggested that it could have improved test accuracy
 
--   Set random_state for the RF model as well to make the results reproducible
+-   Set ```random_state``` for the RF model as well to make the results reproducible
 
--   Use a systematic process to try out different random states for both the data split and the models themselves
+-   Use a systematic process to try out different random states for both the data split and the models themselves to see the resulting variance in results
 
 -   After the model was chosen, we only compared parameters for class4, while we could have also done it for class2
 
 ## References
 
-Course book by James et al.
+James, Witten, Hastie, and Tibshirani, 2021. An Introduction to Statistical Learning with applications in R, 2nd edition. Springer.
 
 <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html>
 
